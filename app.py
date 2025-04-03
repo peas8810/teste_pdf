@@ -1,4 +1,3 @@
-# app.py
 import os
 import shutil
 import subprocess
@@ -10,14 +9,18 @@ from PyPDF2 import PdfMerger, PdfReader, PdfWriter
 from pdf2docx import Converter
 from pdf2image import convert_from_path
 import pytesseract
-import uvicorn
 
-# Configurações e Diretórios
+# Configurações
 POPPLER_PATH = "/usr/bin"
 WORK_DIR = "documentos"
 os.makedirs(WORK_DIR, exist_ok=True)
 
 app = FastAPI()
+
+# ROTA PRINCIPAL – evita 502 no Railway
+@app.get("/")
+def root():
+    return {"mensagem": "API funcionando com sucesso 🚀"}
 
 @app.get("/status")
 def status():
@@ -51,7 +54,6 @@ def pdf_para_word(file: UploadFile = File(...)):
         cv.close()
         return FileResponse(saida, filename=os.path.basename(saida))
     except Exception as e:
-        print("Erro em /pdf-para-word:", str(e))
         return JSONResponse(content={"erro": str(e)}, status_code=500)
 
 @app.post("/jpg-para-pdf")
@@ -67,7 +69,6 @@ def jpg_para_pdf(files: List[UploadFile] = File(...)):
             return FileResponse(caminho_pdf, filename=nome_saida)
         return JSONResponse(content={"erro": "Falha na geração do PDF."}, status_code=500)
     except Exception as e:
-        print("Erro em /jpg-para-pdf:", str(e))
         return JSONResponse(content={"erro": str(e)}, status_code=500)
 
 @app.post("/juntar-pdfs")
@@ -84,7 +85,6 @@ def juntar_pdfs(files: List[UploadFile] = File(...)):
         merger.close()
         return FileResponse(nome_saida, filename="merge_resultado.pdf")
     except Exception as e:
-        print("Erro em /juntar-pdfs:", str(e))
         return JSONResponse(content={"erro": str(e)}, status_code=500)
 
 @app.post("/dividir-pdf")
@@ -103,7 +103,6 @@ def dividir_pdf(file: UploadFile = File(...)):
             arquivos.append(nome_saida)
         return {"arquivos": arquivos}
     except Exception as e:
-        print("Erro em /dividir-pdf:", str(e))
         return JSONResponse(content={"erro": str(e)}, status_code=500)
 
 @app.post("/ocr-pdf")
@@ -121,7 +120,6 @@ def ocr_pdf(file: UploadFile = File(...)):
             f.write(texto)
         return FileResponse(saida, filename=os.path.basename(saida))
     except Exception as e:
-        print("Erro em /ocr-pdf:", str(e))
         return JSONResponse(content={"erro": str(e)}, status_code=500)
 
 @app.post("/ocr-imagem")
@@ -138,7 +136,6 @@ def ocr_imagem(files: List[UploadFile] = File(...)):
             f.write(texto)
         return FileResponse(saida, filename=os.path.basename(saida))
     except Exception as e:
-        print("Erro em /ocr-imagem:", str(e))
         return JSONResponse(content={"erro": str(e)}, status_code=500)
 
 @app.post("/pdf-para-pdfa")
@@ -154,12 +151,8 @@ def pdf_para_pdfa(file: UploadFile = File(...)):
             "-sPDFACompatibilityPolicy=1", f"-sOutputFile={saida}", caminho
         ]
         resultado = subprocess.run(comando, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print("[Ghostscript] STDOUT:", resultado.stdout.decode())
-        print("[Ghostscript] STDERR:", resultado.stderr.decode())
         if os.path.exists(saida) and resultado.returncode == 0:
             return FileResponse(saida, filename=os.path.basename(saida))
         return JSONResponse(content={"erro": "Falha ao converter para PDF/A."}, status_code=500)
     except Exception as e:
-        print("Erro em /pdf-para-pdfa:", str(e))
         return JSONResponse(content={"erro": str(e)}, status_code=500)
-
