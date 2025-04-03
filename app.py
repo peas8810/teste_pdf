@@ -163,5 +163,3 @@ def pdf_para_pdfa(file: UploadFile = File(...)):
         print("Erro em /pdf-para-pdfa:", str(e))
         return JSONResponse(content={"erro": str(e)}, status_code=500)
 
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
