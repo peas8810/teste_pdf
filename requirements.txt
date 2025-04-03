@@ -1,2 +1,8 @@
-flask
-
+fastapi
+uvicorn
+pillow
+pytesseract
+PyPDF2
+pdf2docx
+pdf2image
+python-multipart
